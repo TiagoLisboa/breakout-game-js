@@ -4,6 +4,7 @@
     var ctx = canvas.getContext("2d");
 
     var game = {}
+    game.v = 10;
 
     // Keys Listeners
     var rightPressed = false, leftPressed = false;
@@ -31,7 +32,7 @@
 
     // Ball constructor
 
-    function Ball (x, y, r, ctx) {
+    function Ball (x, y, r) {
         this.x = x;
         this.y = y;
         this.r = r;
@@ -45,7 +46,18 @@
             ctx.closePath();
         }
 
-        this.update = function () {
+        this.update = function (paddle) {
+            if (this.y+this.dy > canvas.height-paddle.h-this.r &&
+                this.x+this.dx > paddle.x-this.r &&
+                this.x+this.dx < paddle.x+paddle.w+this.r) {
+
+                this.dy = -this.dy;
+            }
+
+            if (this.y + this.dy > canvas.height-this.r) {
+                clearInterval(gameLoop);
+            }
+
             if (this.y + this.dy < this.r ||
                 this.y + this.dy > canvas.height-this.r){
                 this.dy = -this.dy;
@@ -62,11 +74,12 @@
     }
 
     // Paddle constructor
-    function Paddle (ctx) {
+    function Paddle (v) {
         this.w = 75;
         this.h = 10;
         this.x = (canvas.width-this.w)/2;
         this.y = canvas.height-this.h;
+        this.v = v;
 
         this.draw = function () {
             ctx.beginPath();
@@ -77,18 +90,18 @@
         }
 
         this.update = function () {
-            if (leftPressed) {
-                this.x -= 2;
+            if (leftPressed && this.x+this.v > 0) {
+                this.x -= this.v;
             }
-            else if (rightPressed) {
-                this.x += 2;
+            else if (rightPressed && this.x-this.v < canvas.width-this.w) {
+                this.x += this.v;
             }
         }
     }
 
     // Initing objects
-    var ball = new Ball (canvas.width/2, canvas.height-30, 10, ctx);
-    var paddle = new Paddle (ctx);
+    var ball = new Ball (canvas.width/2, canvas.height-30, 10);
+    var paddle = new Paddle (7);
 
     // Game Loop
 
@@ -98,11 +111,11 @@
         paddle.draw();
     }
     game.update = function (){
-        ball.update();
         paddle.update();
+        ball.update(paddle);
     }
-    setInterval(function () {
+    var gameLoop = setInterval(function () {
         game.draw();
         game.update();
-    }, 10);
+    }, game.v);
 })();
